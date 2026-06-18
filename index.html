@@ -2,209 +2,387 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="description" content="Play the ultimate unblocked Tube Runner 3D game directly in your browser. Shift gravity, rotate the tunnel grid, dodge fast obstacles, and beat your high score!">
-<meta name="keywords" content="tube runner 3d, tube runner, run 3, 3d running game, unblocked games">
-<title>Tube Runner 3D</title>
+<meta name="description" content="Play Neon Bounce 3D - The ultimate infinite 3D ball runner game with a dynamic shop, unique ability skins, custom keybinds, and active high-score leaderboards!">
+<title>Neon Bounce 3D</title>
 <style>
-body,html{
-    margin:0;padding:0;
-    overflow:hidden;
-    width:100%;height:100%;
-    background:#050510;
-    font-family:monospace;
-    color:#00ffff;user-select:none;
-}
-canvas{
-    display:block;
-    width:100%;height:100%;
-}
-#scoreWidget{
-    position:absolute;
-    top:20px;left:20px;
-    z-index:10;font-size:24px;
-    font-weight:bold;
-    text-shadow:0 0 10px #00ffff;
-}
-#menuOverlay{
-    position:absolute;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(5,5,20,0.95);
-    display:flex;flex-direction:column;
-    justify-content:center;
-    align-items:center;z-index:20;
-    gap:15px;text-align:center;
-}
-button{
-    background:linear-gradient(135deg,#0044ff,#00ccff);
-    border:none;border-radius:5px;
-    color:#ffffff;font-weight:bold;
-    padding:16px 45px;font-size:18px;
-    cursor:pointer;text-transform:uppercase;
-    box-shadow:0 0 15px #00ccff;
-    transition:transform 0.1s;
-}
-button:hover{
-    transform:scale(1.05);
-    filter:brightness(1.1);
-}
+    body, html {
+        margin: 0; padding: 0; overflow: hidden;
+        width: 100%; height: 100%; background-color: #020206;
+        font-family: 'Segoe UI', sans-serif;
+        user-select: none; -webkit-user-select: none; color: #ffffff;
+    }
+    canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+    #hudLayer {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; display: none; flex-direction: column;
+        justify-content: space-between; padding: 25px; box-sizing: border-box; z-index: 50;
+    }
+    .hudWidget {
+        background: rgba(5, 5, 15, 0.85); border: 2px solid #00f0ff;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); border-radius: 8px;
+        padding: 12px 24px; font-weight: bold; font-family: monospace; font-size: 18px;
+    }
+    .flexRowHUD { display: flex; justify-content: space-between; width: 100%; }
+    .menuOverlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at center, rgba(12, 12, 32, 0.98) 0%, rgba(3, 3, 10, 1) 100%);
+        display: flex; justify-content: center; align-items: center; z-index: 100;
+    }
+    .dashboardWindow {
+        width: 960px; height: 640px; background: rgba(8, 8, 24, 0.85);
+        border: 2px solid #00f0ff; box-shadow: 0 0 35px rgba(0, 240, 255, 0.25);
+        border-radius: 14px; display: grid; grid-template-columns: 240px 1fr;
+        overflow: hidden; backdrop-filter: blur(12px);
+    }
+    .sidebar {
+        background: rgba(4, 4, 12, 0.95); border-right: 1px solid rgba(0, 240, 255, 0.15);
+        padding: 35px 15px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .brandTitle { font-size: 26px; font-weight: 900; color: #00f0ff; text-align: center; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,240,255,0.5); margin-bottom: 25px; }
+    .tabButton { background: transparent; border: none; color: #7f7f9e; padding: 14px 20px; font-size: 14px; font-weight: bold; text-align: left; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+    .tabButton:hover, .tabButton.activeTab { background: rgba(0, 240, 255, 0.1); color: #ffffff; }
+    .tabButton.activeTab { border-left: 5px solid #00f0ff; border-radius: 0 6px 6px 0; background: rgba(0, 240, 255, 0.12); }
+    .contentPane { padding: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; position: relative; }
+    .tabView { display: none; flex-direction: column; gap: 20px; }
+    .tabView.activeView { display: flex; }
+    h2 { margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; border-bottom: 2px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+    button.actionLaunchBtn { background: linear-gradient(135deg, #0044ff 0%, #00ccff 100%); border: none; color: #ffffff; font-size: 16px; font-weight: 900; padding: 16px; border-radius: 6px; cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase; margin-top: auto; box-shadow: 0 5px 20px rgba(0,68,255,0.35); }
+    button.actionLaunchBtn:hover { transform: translateY(-2px); box-shadow: 0 7px 25px rgba(0,204,255,0.5); }
+    .currencyCounter { font-size: 18px; font-weight: bold; color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.4); margin-bottom: 10px; }
+    .shopGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-height: 380px; overflow-y: auto; }
+    .shopCard { background: #050512; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+    .shopCard.equipped { border-color: #00f0ff; background: rgba(0,240,255,0.03); }
+    .skinName { font-weight: bold; color: #fff; font-size: 15px; }
+    .skinAbility { font-size: 12px; color: #00f0ff; }
+    .sliderWrapper { display: flex; align-items: center; gap: 15px; background: #04040c; padding: 12px; border-radius: 6px; }
+    input[type="range"] { flex: 1; background: #12122d; height: 6px; border-radius: 3px; outline: none; }
+    .rebindGrid { display: grid; grid-template-columns: 1fr auto; gap: 10px; background: #04040c; padding: 15px; border-radius: 8px; }
+    .rebindBtn { background: #12122d; border: 1px solid rgba(255,255,255,0.1); color: #00f0ff; padding: 6px 12px; border-radius: 4px; font-family: monospace; cursor: pointer; min-width: 80px; }
+    .leaderboardList { display: flex; flex-direction: column; gap: 8px; background: #04040c; padding: 15px; border-radius: 8px; max-height: 350px; overflow-y: auto; }
+    .leaderboardRow { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: monospace; }
+    #previewContainer { width: 100%; height: 160px; background: #04040c; border: 1px solid rgba(0,240,255,0.2); border-radius: 8px; overflow: hidden; position: relative; margin-top: auto; }
 </style>
 <script src="https://cloudflare.com"></script>
 </head>
 <body>
-<div id="scoreWidget">SCORE: <span id="scoreValue">0</span></div>
-<div id="menuOverlay">
-    <h1 id="menuTitle" style="font-size:46px;margin:0;text-shadow:0 0 20px #00ccff;letter-spacing:2px;">TUBE RUNNER 3D</h1>
-    <p style="color:#8888aa;margin:0 0 15px 0;font-size:14px;">Controls: Use A / D or Left / Right Arrow Keys to Spin the Tunnel Grid!</p>
-    <button id="actionButton" onclick="triggerGameStart()">START RUN</button>
-</div>
+    <div id="mainDashboard" class="menuOverlay">
+        <div class="dashboardWindow">
+            <div class="sidebar">
+                <div class="brandTitle">NEON BOUNCE</div>
+                <button class="tabButton activeTab" onclick="uiTabShift('pane-play')">🎮 ARENA PLAY</button>
+                <button class="tabButton" onclick="uiTabShift('pane-shop')">🛒 NEON SHOP</button>
+                <button class="tabButton" onclick="uiTabShift('pane-scores')">🏆 LEADERBOARD</button>
+                <button class="tabButton" onclick="uiTabShift('pane-settings')">⚙️ SETTINGS</button>
+                <div style="font-size: 11px; font-weight: bold; color: #00f0ff; margin-top: 20px;">PREVIEW SKIN:</div>
+                <div id="previewContainer"></div>
+            </div>
+            <div class="contentPane">
+                <div id="pane-play" class="tabView activeView">
+                    <h2>LAUNCH SIMULATION MATCH</h2>
+                    <p style="color:#8888aa; line-height: 1.5; margin: 0;">Swerve down an infinite 3D corridor. Gather floating coins worth 5 points each, avoid red hazards, and pop special skins abilities.</p>
+                    <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+                        <label style="font-size:11px; font-weight:bold; color:#00f0ff;">OPERATOR IDENTIFIER:</label>
+                        <input type="text" id="inputUsername" value="PILOT_01" style="background:#04040c; border:1px solid rgba(0,240,255,0.3); padding:12px; color:white; border-radius:6px; outline:none;" maxlength="10">
+                    </div>
+                </div>
+                <div id="pane-shop" class="tabView">
+                    <h2>NEON SKINS SHOP</h2>
+                    <div class="currencyCounter">TOTAL COINS: <span id="shopCoinWallet">0</span> 🪙</div>
+                    <div class="shopGrid" id="shopGridInjectionRoot"></div>
+                </div>
+                <div id="pane-scores" class="tabView">
+                    <h2>DISTANCE LEADERBOARD</h2>
+                    <div class="leaderboardList" id="leaderboardViewRoot"></div>
+                </div>
+                <div id="pane-settings" class="tabView">
+                    <h2>INPUT MAPPINGS</h2>
+                    <div class="sliderWrapper">
+                        <label style="font-size:12px; font-weight:bold; width:130px;">LOOK SENSITIVITY:</label>
+                        <input type="range" id="sliderSens" min="5" max="100" value="45">
+                    </div>
+                    <div class="rebindGrid" id="rebindInjectionsAnchor"></div>
+                </div>
+                <button class="actionLaunchBtn" onclick="compileAndBootSimulationInstance()">INITIALIZE ARENA RUN</button>
+            </div>
+        </div>
+    </div>
+    <div id="pauseDashboard" class="menuOverlay" style="display:none; background: rgba(3,3,10,0.92); backdrop-filter: blur(8px);">
+        <div style="background:#08081a; border:2px solid #ff0055; padding:40px; border-radius:10px; display:flex; flex-direction:column; gap:15px; width:280px; text-align:center;">
+            <h3 style="color:#ff0055; margin:0; font-family:monospace; font-size:22px;">SUSPENDED</h3>
+            <button onclick="requestLockReengagement()">RESUME RUN</button>
+            <button onclick="abortMatchInstanceFallback()" style="background:#121228; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:10px; color:#aaa; cursor:pointer;">QUIT</button>
+        </div>
+    </div>
+    <div id="hudLayer">
+        <div class="flexRowHUD">
+            <div id="hudPilotTag" class="hudWidget">PILOT: PILOT_01</div>
+            <div id="hudShieldIndicator" class="hudWidget" style="border-color:#ff0055; color:#ff0055;">SHIELD: 100%</div>
+            <div id="hudScoreViewer" class="hudWidget" style="border-color:#00ff55; color:#00ff55;">DISTANCE: 0m</div>
+        </div>
+        <div class="flexRowHUD" style="align-items: flex-end;">
+            <div class="hudWidget" style="font-size:11px; border-color:rgba(255,255,255,0.12); color:#88a;">ESC - Pause</div>
+            <div id="hudCoinsViewer" class="hudWidget" style="border-color:#ffcc00; color:#ffcc00;">COINS: 0 🪙</div>
+            <div id="hudAbilityCharge" class="hudWidget" style="border-color:#a800ff; color:#a800ff;">ABILITY [E]</div>
+        </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
 <script>
-let scene, camera, renderer, tubeMesh;
-let gameClock = new THREE.Clock();
-let isGameRunning = false;
-let currentScore = 0;
-let desiredRotation = 0;
-let currentRotation = 0;
+const canvas = document.getElementById('gameCanvas'), mainDash = document.getElementById('mainDashboard');
+const pauseDash = document.getElementById('pauseDashboard'), hud = document.getElementById('hudLayer');
+const shopRoot = document.getElementById('shopGridInjectionRoot'), scoreRoot = document.getElementById('leaderboardViewRoot');
 
-let obstaclePool = [];
-let gameSpeed = 45;
-let unitSegmentLength = 12;
-let maxSegmentsCount = 30;
+let scene, camera, renderer, prevScene, prevCamera, prevRenderer, prevBallMesh;
+let clock = new THREE.Clock(), gameRunning = false, matchPaused = false;
+let score = 0, coinsAccumulated = 0, totalCoinsBank = parseInt(localStorage.getItem('nb_bank') || '0');
 
-function triggerGameStart() {
-    document.getElementById('menuOverlay').style.display = 'none';
-    if (!scene) {
-        initializeGraphicsEngine();
-    } else {
-        flushAndResetMatch();
-    }
-    isGameRunning = true;
+let keyRegistry = { 'Left': 'KeyA', 'Right': 'KeyD', 'Ability': 'KeyE' };
+let skinInventory = [
+    { id: 0, name: 'Cyan Neon', cost: 0, hex: 0x00f0ff, skill: 'Speed Burst', bought: true },
+    { id: 1, name: 'Crimson Fury', cost: 20, hex: 0xff0055, skill: 'Coin Magnet', bought: false },
+    { id: 2, name: 'Golden Aura', cost: 50, hex: 0xffcc00, skill: 'Double Score', bought: false },
+    { id: 3, name: 'Viper Strike', cost: 100, hex: 0x00ff66, skill: 'Shield Boost', bought: false },
+    { id: 4, name: 'Void Phantom', cost: 200, hex: 0x7a00ff, skill: 'Phase Pass', bought: false }
+];
+let activeSkinId = parseInt(localStorage.getItem('nb_active_skin') || '0');
+let leaderboardData = [{ name: 'ALPHA', score: 1520 }, { name: 'CHRONO', score: 1140 }, { name: 'VORTEX', score: 850 }];
+
+let playerBall, arenaTrack, environmentSpeed = 50, cooldownTimer = 0, phaseTimer = 0, magnetTimer = 0;
+let obstaclePool = [], coinPool = [], particlePool = [];
+
+function uiTabShift(targetPaneId) {
+    document.querySelectorAll('.tabView').forEach(v => v.classList.remove('activeView'));
+    document.querySelectorAll('.tabButton').forEach(b => b.classList.remove('activeTab'));
+    document.getElementById(targetPaneId).classList.add('activeView');
+    event.target.classList.add('activeTab');
 }
 
-function initializeGraphicsEngine() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050510);
-    scene.fog = new THREE.FogExp2(0x050510, 0.015);
+function updateCoinsDisplay() {
+    document.getElementById('shopCoinWallet').innerText = totalCoinsBank;
+    localStorage.setItem('nb_bank', totalCoinsBank);
+}
+
+function renderShopItems() {
+    shopRoot.innerHTML = '';
+    skinInventory.forEach(item => {
+        if (localStorage.getItem('nb_skin_' + item.id)) item.bought = true;
+        let card = document.createElement('div');
+        card.className = `shopCard ${item.id === activeSkinId ? 'equipped' : ''}`;
+        let btnText = item.bought ? (item.id === activeSkinId ? 'EQUIPPED' : 'EQUIP') : `BUY [${item.cost} 🪙]`;
+        card.innerHTML = `
+            <div class="skinName" style="color:#${item.hex.toString(16).padStart(6,'0')}">${item.name}</div>
+            <div class="skinAbility">Skill: ${item.skill}</div>
+            <button class="rebindBtn" style="width:100%; margin-top:auto;" onclick="processShopAction(${item.id})">${btnText}</button>
+        `;
+        shopRoot.appendChild(card);
+    });
+}
+
+function processShopAction(id) {
+    let item = skinInventory.find(x => x.id === id);
+    if (!item.bought) {
+        if (totalCoinsBank >= item.cost) {
+            totalCoinsBank -= item.cost; item.bought = true;
+            localStorage.setItem('nb_skin_' + id, 'true'); updateCoinsDisplay();
+        } else return;
+    }
+    activeSkinId = id; localStorage.setItem('nb_active_skin', id);
+    renderShopItems(); updateLiveMeshPreview();
+}
+
+function populateHardwareKeybinds() {
+    let anchor = document.getElementById('rebindInjectionsAnchor'); anchor.innerHTML = '';
+    for (const [actionName, currentKey] of Object.entries(keyRegistry)) {
+        let row = document.createElement('div'); row.style.display = 'contents';
+        row.innerHTML = `
+            <span style="font-size:13px; font-weight:bold; align-self:center;">${actionName.toUpperCase()}:</span>
+            <button class="rebindBtn" onclick="captureKeybind('${actionName}', this)">${currentKey.replace('Key','')}</button>
+        `;
+        anchor.appendChild(row);
+    }
+}
+
+function captureKeybind(action, btn) {
+    btn.innerText = 'PRESS KEY...'; btn.style.borderColor = '#ff0055';
+    let handle = (e) => {
+        e.preventDefault(); keyRegistry[action] = e.code;
+        btn.innerText = e.code.replace('Key',''); btn.style.borderColor = 'rgba(255,255,255,0.1)';
+        window.removeEventListener('keydown', handle);
+    };
+    window.addEventListener('keydown', handle);
+}
+
+function populateLeaderboard() {
+    scoreRoot.innerHTML = '';
+    let combined = [...leaderboardData].sort((a,b) => b.score - a.score);
+    combined.forEach((row, i) => {
+        scoreRoot.innerHTML += `<div class="leaderboardRow"><span>#0${i+1} ${row.name}</span><span style="color:#00f0ff">${row.score}m</span></div>`;
+    });
+}
+</script>
+<script>
+function initPreviewEngine() {
+    let container = document.getElementById('previewContainer');
+    prevScene = new THREE.Scene();
+    prevCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    prevCamera.position.set(0, 0, 4.5);
     
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    prevRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    prevRenderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(prevRenderer.domElement);
     
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    prevScene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    let light = new THREE.DirectionalLight(0xffffff, 0.6); light.position.set(2, 2, 2); prevScene.add(light);
+    
+    updateLiveMeshPreview();
+    animatePreview();
+}
+
+function updateLiveMeshPreview() {
+    if (prevBallMesh) prevScene.remove(prevBallMesh);
+    let skin = skinInventory.find(x => x.id === activeSkinId);
+    let geo = new THREE.SphereGeometry(1.2, 32, 32);
+    let mat = new THREE.MeshStandardMaterial({ color: skin.hex, wireframe: true, emissive: skin.hex, emissiveIntensity: 0.4 });
+    prevBallMesh = new THREE.Mesh(geo, mat);
+    prevScene.add(prevBallMesh);
+}
+
+function animatePreview() {
+    requestAnimationFrame(animatePreview);
+    if (prevBallMesh) { prevBallMesh.rotation.y += 0.015; prevBallMesh.rotation.x += 0.005; }
+    if (prevRenderer && prevScene && prevCamera) prevRenderer.render(prevScene, prevCamera);
+}
+
+function initCore3DEngine() {
+    scene = new THREE.Scene(); scene.background = new THREE.Color(0x020206);
+    scene.fog = new THREE.FogExp2(0x020206, 0.008);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    
-    scene.add(new THREE.AmbientLight(0x222255));
-    let mainSun = new THREE.DirectionalLight(0x00ffff, 1.5);
-    mainSun.position.set(0, 10, 5);
-    scene.add(mainSun);
+    renderer.shadowMap.enabled = true;
 
-    let canvasMap = document.createElement('canvas');
-    canvasMap.width = canvasMap.height = 128;
-    let canvasCtx = canvasMap.getContext('2d');
-    canvasCtx.fillStyle = '#0a0a28';
-    canvasCtx.fillRect(0, 0, 128, 128);
-    canvasCtx.strokeStyle = '#00ffff';
-    canvasCtx.lineWidth = 4;
-    canvasCtx.strokeRect(0, 0, 128, 128);
-    
-    let tubeTexture = new THREE.CanvasTexture(canvasMap);
-    tubeTexture.wrapS = tubeTexture.wrapT = THREE.RepeatWrapping;
-    tubeTexture.repeat.set(8, maxSegmentsCount);
-    
-    let tubeGeometry = new THREE.CylinderGeometry(10, 10, unitSegmentLength * maxSegmentsCount, 8, maxSegmentsCount, true);
-    let tubeMaterial = new THREE.MeshStandardMaterial({ map: tubeTexture, side: THREE.BackSide, roughness: 0.2 });
-    
-    tubeMesh = new THREE.Mesh(tubeGeometry, tubeMaterial);
-    tubeMesh.rotation.x = Math.PI / 2;
-    tubeMesh.position.z = -(unitSegmentLength * maxSegmentsCount) / 2;
-    scene.add(tubeMesh);
+    scene.add(new THREE.AmbientLight(0x111133, 0.5));
+    let sun = new THREE.DirectionalLight(0x00f0ff, 1.2); sun.position.set(10, 40, 20); sun.castShadow = true; scene.add(sun);
 
-    camera.position.set(0, -7.5, 0);
+    // Build Cyber Corridor Runway
+    let trackGeo = new THREE.BoxGeometry(24, 1, 1000);
+    let trackMat = new THREE.MeshStandardMaterial({ color: 0x0a0a1f, roughness: 0.4, metalness: 0.8 });
+    arenaTrack = new THREE.Mesh(trackGeo, trackMat); arenaTrack.position.set(0, -2, -450); arenaTrack.receiveShadow = true; scene.add(arenaTrack);
+
+    // Grid Gridlines Decorator
+    let grid = new THREE.GridHelper(1000, 100, 0x00f0ff, 0x004455); grid.position.set(0, -1.45, -450); scene.add(grid);
+
+    // Instantiate Player Ball Mesh
+    let skin = skinInventory.find(x => x.id === activeSkinId);
+    let playerGeo = new THREE.SphereGeometry(1.2, 32, 32);
+    let playerMat = new THREE.MeshStandardMaterial({ color: skin.hex, emissive: skin.hex, emissiveIntensity: 0.5, roughness: 0.1 });
+    playerBall = new THREE.Mesh(playerGeo, playerMat); playerBall.position.set(0, 0, 0); playerBall.castShadow = true; scene.add(playerBall);
+
+    camera.position.set(0, 5, 12); camera.lookAt(0, 1, -5);
 
     window.addEventListener('keydown', (e) => {
-        if (!isGameRunning) return;
-        if (e.code === 'KeyA' || e.code === 'ArrowLeft') desiredRotation -= Math.PI / 4;
-        if (e.code === 'KeyD' || e.code === 'ArrowRight') desiredRotation += Math.PI / 4;
+        if (!gameRunning || matchPaused) return;
+        let sens = (sliderSens.value / 50) * 8;
+        if (e.code === keyRegistry['Left']) playerBall.position.x = Math.max(-10, playerBall.position.x - sens);
+        if (e.code === keyRegistry['Right']) playerBall.position.x = Math.min(10, playerBall.position.x + sens);
+        if (e.code === keyRegistry['Ability'] && cooldownTimer <= 0) activateSkinAbility();
     });
-    
+
     window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+        camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
-
-    flushAndResetMatch();
-    executeCoreRenderTick();
+}
+</script>
+<script>
+function activateSkinAbility() {
+    cooldownTimer = 10.0; // 10 second skill delay loop
+    document.getElementById('hudAbilityCharge').innerText = "COOLDOWN";
+    document.getElementById('hudAbilityCharge').style.borderColor = "#555";
+    
+    if (activeSkinId === 0) environmentSpeed += 35; // Turbo Sprint Speed Burst
+    if (activeSkinId === 1) magnetTimer = 5.0; // 5-Second Coin Multi-Axis Pull Magnet
+    if (activeSkinId === 4) phaseTimer = 4.0; // 4-Second Hazard Clipping Phase Void
 }
 
-function flushAndResetMatch() {
-    currentScore = 0;
-    gameSpeed = 45;
-    desiredRotation = currentRotation = 0;
-    tubeMesh.rotation.y = 0;
-    document.getElementById('scoreValue').innerText = currentScore;
-    
-    obstaclePool.forEach(obj => scene.remove(obj));
-    obstaclePool = [];
-    
-    for (let i = 0; i < 8; i++) {
-        instantiateObstacleNode(-80 - (i * 35));
-    }
+function compileAndBootSimulationInstance() {
+    mainDash.style.display = 'none'; hud.style.display = 'flex';
+    document.getElementById('hudPilotTag').innerText = "PILOT: " + document.getElementById('inputUsername').value.toUpperCase();
+    if (!scene) initCore3DEngine(); else rstMatch();
+    canvas.requestPointerLock(); gameRunning = true; matchPaused = false;
 }
 
-function instantiateObstacleNode(zCoordinates) {
-    let obstacleGeometry = new THREE.BoxGeometry(4.5, 2, 4);
-    let obstacleMaterial = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0x660011, roughness: 0.3 });
-    let blockMesh = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
-    
-    let targetLane = Math.floor(Math.random() * 8);
-    let radialAngle = targetLane * (Math.PI / 4);
-    
-    blockMesh.position.set(Math.sin(radialAngle) * 8.8, Math.cos(radialAngle) * 8.8, zCoordinates);
-    blockMesh.rotation.z = -radialAngle;
-    
-    scene.add(blockMesh);
-    obstaclePool.push(blockMesh);
+function requestLockReengagement() { canvas.requestPointerLock(); }
+function abortMatchInstanceFallback() { gameRunning = matchPaused = false; pauseDash.style.display = hud.style.display = 'none'; mainDash.style.display = 'flex'; document.exitPointerLock(); }
+
+document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === canvas) { pauseDash.style.display = 'none'; matchPaused = false; }
+    else if (gameRunning) { pauseDash.style.display = 'flex'; matchPaused = true; }
+});
+
+function rstMatch() {
+    score = coinsAccumulated = 0; environmentSpeed = 50; cooldownTimer = phaseTimer = magnetTimer = 0; playerBall.position.set(0, 0, 0);
+    let skin = skinInventory.find(x => x.id === activeSkinId); playerBall.material.color.setHex(skin.hex); playerBall.material.emissive.setHex(skin.hex);
+    obstaclePool.forEach(o => scene.remove(o)); obstaclePool = [];
+    coinPool.forEach(c => scene.remove(c)); coinPool = [];
+    for (let i = 0; i < 6; i++) spawnObstacleNode(-100 - (i * 120));
+    for (let i = 0; i < 10; i++) spawnCoinNode(-50 - (i * 60));
+    document.getElementById('hudScoreViewer').innerText = "DISTANCE: 0m";
+    document.getElementById('hudCoinsViewer').innerText = "COINS: 0 🪙";
+    document.getElementById('hudAbilityCharge').innerText = "ABILITY READY [E]";
+    document.getElementById('hudAbilityCharge').style.borderColor = "#a800ff";
 }
 
-function executeCoreRenderTick() {
-    requestAnimationFrame(executeCoreRenderTick);
-    let frameDelta = gameClock.getDelta();
-    if (frameDelta > 0.1) frameDelta = 0.1;
+function spawnObstacleNode(z) {
+    let mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.random() * 6 + 3, 4, 3), new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0x440011 }));
+    mesh.position.set((Math.random() - 0.5) * 16, 0.5, z); mesh.castShadow = true; scene.add(mesh); obstaclePool.push(mesh);
+}
 
-    if (isGameRunning) {
-        currentScore += Math.floor(frameDelta * 15);
-        document.getElementById('scoreValue').innerText = currentScore;
-        gameSpeed += frameDelta * 0.4;
+function spawnCoinNode(z) {
+    let mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.3, 16), new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0x332200, metalness: 0.9, roughness: 0.1 }));
+    mesh.rotation.x = Math.PI / 2; mesh.position.set((Math.random() - 0.5) * 16, 0, z); scene.add(mesh); coinPool.push(mesh);
+}
 
-        currentRotation += (desiredRotation - currentRotation) * 12 * frameDelta;
-        tubeMesh.rotation.y = currentRotation;
+function runRuntimeTicksLoop() {
+    requestAnimationFrame(runRuntimeTicksLoop);
+    let delta = clock.getDelta(); if (delta > 0.1) delta = 0.1;
 
+    if (gameRunning && !matchPaused) {
+        score += Math.floor(delta * 12); document.getElementById('hudScoreViewer').innerText = `DISTANCE: ${score}m`;
+        environmentSpeed += delta * 0.8; playerBall.rotation.x -= (environmentSpeed * 0.05) * delta;
+
+        if (cooldownTimer > 0) {
+            cooldownTimer -= delta;
+            if (cooldownTimer <= 0) { document.getElementById('hudAbilityCharge').innerText = "ABILITY READY [E]"; document.getElementById('hudAbilityCharge').style.borderColor = "#a800ff"; }
+        }
+        if (phaseTimer > 0) { phaseTimer -= delta; playerBall.material.opacity = 0.4; playerBall.material.transparent = true; } else { playerBall.material.opacity = 1.0; playerBall.material.transparent = false; }
+        if (magnetTimer > 0) magnetTimer -= delta;
+
+        // Manage Dynamic Hazards Updates
         for (let i = obstaclePool.length - 1; i >= 0; i--) {
-            let activeBlock = obstaclePool[i];
-            activeBlock.position.z += gameSpeed * frameDelta;
-
-            let localizedVector = activeBlock.position.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), currentRotation);
-            let absoluteDistance = localizedVector.distanceTo(new THREE.Vector3(0, -7.5, 0));
-
-            if (absoluteDistance < 2.3 && Math.abs(activeBlock.position.z) < 2) {
-                isGameRunning = false;
-                document.getElementById('menuOverlay').style.display = 'flex';
-                document.getElementById('menuTitle').innerText = "CRASHED!";
-                document.getElementById('actionButton').innerText = "RUN AGAIN";
-                return;
+            let o = obstaclePool[i]; o.position.z += environmentSpeed * delta;
+            if (playerBall.position.distanceTo(o.position) < 2.2 && phaseTimer <= 0) {
+                gameRunning = false; leaderboardData.push({ name: document.getElementById('inputUsername').value, score: score });
+                populateLeaderboard(); abortMatchInstanceFallback(); return;
             }
+            if (o.position.z > 15) { o.position.z = -650; o.position.x = (Math.random() - 0.5) * 16; }
+        }
 
-            if (activeBlock.position.z > 10) {
-                activeBlock.position.z = -260;
-                let targetLane = Math.floor(Math.random() * 8);
-                let radialAngle = targetLane * (Math.PI / 4);
-                activeBlock.position.set(Math.sin(radialAngle) * 8.8, Math.cos(radialAngle) * 8.8, -260);
-                activeBlock.rotation.z = -radialAngle;
+        // Manage Dynamic Coins Updates
+        for (let i = coinPool.length - 1; i >= 0; i--) {
+            let c = coinPool[i]; c.position.z += environmentSpeed * delta; c.rotation.z += 0.02;
+            if (magnetTimer > 0 && c.position.z < 80) { let dir = new THREE.Vector3().subVectors(playerBall.position, c.position).normalize(); c.position.addScaledVector(dir, 40 * delta); }
+            if (playerBall.position.distanceTo(c.position) < 2.0) {
+                coinsAccumulated += 1; totalCoinsBank += (activeSkinId === 2 ? 10 : 5); // 5 points or 2x Gold Multiplier
+                document.getElementById('hudCoinsViewer').innerText = `COINS: ${coinsAccumulated} 🪙`; updateCoinsDisplay();
+                c.position.z = -600; c.position.x = (Math.random() - 0.5) * 16;
             }
+            if (c.position.z > 15) { c.position.z = -600; c.position.x = (Math.random() - 0.5) * 16; }
         }
     }
-    if (scene && camera) renderer.render(scene, camera);
+    if (renderer && scene && camera) renderer.render(scene, camera);
 }
+
+window.onload = () => { initPreviewEngine(); renderShopItems(); populateHardwareKeybinds(); populateLeaderboard(); updateCoinsDisplay(); runRuntimeTicksLoop(); };
 </script>
 </body>
 </html>
