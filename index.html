@@ -2,387 +2,435 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="description" content="Play Neon Bounce 3D - The ultimate infinite 3D ball runner game with a dynamic shop, unique ability skins, custom keybinds, and active high-score leaderboards!">
 <title>Neon Bounce 3D</title>
 <style>
     body, html {
-        margin: 0; padding: 0; overflow: hidden;
-        width: 100%; height: 100%; background-color: #020206;
-        font-family: 'Segoe UI', sans-serif;
-        user-select: none; -webkit-user-select: none; color: #ffffff;
+        margin:0; padding:0; overflow:hidden;
+        width:100%; height:100%; background:#020208;
+        font-family:monospace; color:#0ff; user-select:none;
     }
-    canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
-    #hudLayer {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; display: none; flex-direction: column;
-        justify-content: space-between; padding: 25px; box-sizing: border-box; z-index: 50;
+    canvas { display:block; width:100%; height:100%; position:absolute; z-index:1; }
+    
+    /* INTERACTIVE DASHBOARD CONTAINER overlays */
+    .screen-overlay {
+        position:absolute; top:0; left:0; width:100%; height:100%;
+        background:rgba(5,5,15,0.96); display:flex;
+        justify-content:center; align-items:center; z-index:100;
     }
-    .hudWidget {
-        background: rgba(5, 5, 15, 0.85); border: 2px solid #00f0ff;
-        box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); border-radius: 8px;
-        padding: 12px 24px; font-weight: bold; font-family: monospace; font-size: 18px;
-    }
-    .flexRowHUD { display: flex; justify-content: space-between; width: 100%; }
-    .menuOverlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(circle at center, rgba(12, 12, 32, 0.98) 0%, rgba(3, 3, 10, 1) 100%);
-        display: flex; justify-content: center; align-items: center; z-index: 100;
-    }
-    .dashboardWindow {
-        width: 960px; height: 640px; background: rgba(8, 8, 24, 0.85);
-        border: 2px solid #00f0ff; box-shadow: 0 0 35px rgba(0, 240, 255, 0.25);
-        border-radius: 14px; display: grid; grid-template-columns: 240px 1fr;
-        overflow: hidden; backdrop-filter: blur(12px);
+    .window-pane {
+        width:860px; height:540px; background:#04040c;
+        border:2px solid #0ff; box-shadow:0 0 25px rgba(0,255,255,0.25);
+        border-radius:10px; display:grid; grid-template-columns:220px 1fr; overflow:hidden;
     }
     .sidebar {
-        background: rgba(4, 4, 12, 0.95); border-right: 1px solid rgba(0, 240, 255, 0.15);
-        padding: 35px 15px; display: flex; flex-direction: column; gap: 10px;
+        background:#020206; border-right:1px solid rgba(0,255,255,0.2);
+        padding:25px 15px; display:flex; flex-direction:column; gap:8px;
     }
-    .brandTitle { font-size: 26px; font-weight: 900; color: #00f0ff; text-align: center; letter-spacing: 2px; text-shadow: 0 0 12px rgba(0,240,255,0.5); margin-bottom: 25px; }
-    .tabButton { background: transparent; border: none; color: #7f7f9e; padding: 14px 20px; font-size: 14px; font-weight: bold; text-align: left; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-    .tabButton:hover, .tabButton.activeTab { background: rgba(0, 240, 255, 0.1); color: #ffffff; }
-    .tabButton.activeTab { border-left: 5px solid #00f0ff; border-radius: 0 6px 6px 0; background: rgba(0, 240, 255, 0.12); }
-    .contentPane { padding: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; position: relative; }
-    .tabView { display: none; flex-direction: column; gap: 20px; }
-    .tabView.activeView { display: flex; }
-    h2 { margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; border-bottom: 2px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
-    button.actionLaunchBtn { background: linear-gradient(135deg, #0044ff 0%, #00ccff 100%); border: none; color: #ffffff; font-size: 16px; font-weight: 900; padding: 16px; border-radius: 6px; cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase; margin-top: auto; box-shadow: 0 5px 20px rgba(0,68,255,0.35); }
-    button.actionLaunchBtn:hover { transform: translateY(-2px); box-shadow: 0 7px 25px rgba(0,204,255,0.5); }
-    .currencyCounter { font-size: 18px; font-weight: bold; color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.4); margin-bottom: 10px; }
-    .shopGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-height: 380px; overflow-y: auto; }
-    .shopCard { background: #050512; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-    .shopCard.equipped { border-color: #00f0ff; background: rgba(0,240,255,0.03); }
-    .skinName { font-weight: bold; color: #fff; font-size: 15px; }
-    .skinAbility { font-size: 12px; color: #00f0ff; }
-    .sliderWrapper { display: flex; align-items: center; gap: 15px; background: #04040c; padding: 12px; border-radius: 6px; }
-    input[type="range"] { flex: 1; background: #12122d; height: 6px; border-radius: 3px; outline: none; }
-    .rebindGrid { display: grid; grid-template-columns: 1fr auto; gap: 10px; background: #04040c; padding: 15px; border-radius: 8px; }
-    .rebindBtn { background: #12122d; border: 1px solid rgba(255,255,255,0.1); color: #00f0ff; padding: 6px 12px; border-radius: 4px; font-family: monospace; cursor: pointer; min-width: 80px; }
-    .leaderboardList { display: flex; flex-direction: column; gap: 8px; background: #04040c; padding: 15px; border-radius: 8px; max-height: 350px; overflow-y: auto; }
-    .leaderboardRow { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: monospace; }
-    #previewContainer { width: 100%; height: 160px; background: #04040c; border: 1px solid rgba(0,240,255,0.2); border-radius: 8px; overflow: hidden; position: relative; margin-top: auto; }
+    .menu-btn {
+        background:transparent; border:none; color:#588; padding:12px;
+        font-size:13px; font-weight:bold; text-align:left; cursor:pointer;
+    }
+    .menu-btn.active, .menu-btn:hover { color:#fff; border-left:3px solid #0ff; background:rgba(0,255,255,0.05); }
+    
+    .view-content { padding:30px; overflow-y:auto; display:none; flex-direction:column; gap:15px; }
+    .view-content.active { display:flex; }
+    
+    /* APPARATUS UTILITIES STYLES */
+    button.launch-btn {
+        background:linear-gradient(135deg,#0055ff,#00ccff); border:none;
+        color:#fff; padding:15px; font-weight:bold; cursor:pointer;
+        text-transform:uppercase; box-shadow:0 0 15px #0cf; margin-top:auto;
+    }
+    .shop-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; max-height:300px; overflow-y:auto; }
+    .shop-card { background:#08081a; border:1px solid #355; padding:12px; border-radius:6px; display:flex; flex-direction:column; gap:6px; }
+    .shop-card.selected { border-color:#0ff; background:rgba(0,255,255,0.05); }
+    .bind-row { display:grid; grid-template-columns:1fr auto; gap:10px; background:#020206; padding:10px; align-items:center; }
+    .bind-btn { background:#112; border:1px solid #0ff; color:#0ff; padding:5px 10px; cursor:pointer; min-width:80px; font-family:monospace; }
+    
+    /* ACTIVE OVER-ARENA HEADS UP STATS */
+    #hud {
+        position:absolute; top:0; left:0; width:100%; height:100%;
+        pointer-events:none; display:none; justify-content:space-between;
+        padding:20px; box-sizing:border-box; z-index:50;
+    }
+    .widget { background:rgba(2,2,6,0.85); border:1px solid #0ff; padding:8px 16px; font-weight:bold; font-size:16px; }
 </style>
 <script src="https://cloudflare.com"></script>
 </head>
 <body>
-    <div id="mainDashboard" class="menuOverlay">
-        <div class="dashboardWindow">
+
+    <!-- CORE SYSTEM INTERRUPT MAIN DASHBOARD -->
+    <div id="menuLayer" class="screen-overlay">
+        <div class="window-pane">
             <div class="sidebar">
-                <div class="brandTitle">NEON BOUNCE</div>
-                <button class="tabButton activeTab" onclick="uiTabShift('pane-play')">🎮 ARENA PLAY</button>
-                <button class="tabButton" onclick="uiTabShift('pane-shop')">🛒 NEON SHOP</button>
-                <button class="tabButton" onclick="uiTabShift('pane-scores')">🏆 LEADERBOARD</button>
-                <button class="tabButton" onclick="uiTabShift('pane-settings')">⚙️ SETTINGS</button>
-                <div style="font-size: 11px; font-weight: bold; color: #00f0ff; margin-top: 20px;">PREVIEW SKIN:</div>
-                <div id="previewContainer"></div>
+                <div style="font-size:20px; font-weight:900; color:#0ff; text-align:center; margin-bottom:20px; letter-spacing:1px;">NEON BOUNCE</div>
+                <button class="menu-btn active" onclick="tab('pane-play')">🏁 RUN SYSTEM</button>
+                <button class="menu-btn" onclick="tab('pane-shop')">🛒 SKIN MATRIX</button>
+                <button class="menu-btn" onclick="tab('pane-scores')">🏆 RANKINGS</button>
+                <button class="menu-btn" onclick="tab('pane-keys')">⌨️ KEYBINDS</button>
+                <div id="preview3D" style="width:100%; height:120px; background:#010103; border:1px dashed #355; margin-top:auto; border-radius:4px;"></div>
             </div>
-            <div class="contentPane">
-                <div id="pane-play" class="tabView activeView">
-                    <h2>LAUNCH SIMULATION MATCH</h2>
-                    <p style="color:#8888aa; line-height: 1.5; margin: 0;">Swerve down an infinite 3D corridor. Gather floating coins worth 5 points each, avoid red hazards, and pop special skins abilities.</p>
-                    <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-                        <label style="font-size:11px; font-weight:bold; color:#00f0ff;">OPERATOR IDENTIFIER:</label>
-                        <input type="text" id="inputUsername" value="PILOT_01" style="background:#04040c; border:1px solid rgba(0,240,255,0.3); padding:12px; color:white; border-radius:6px; outline:none;" maxlength="10">
-                    </div>
+            
+            <div style="display:flex; flex-direction:column; height:100%; background:#03030a;">
+                <!-- PANELS CONTAINERS -->
+                <div id="pane-play" class="view-content active">
+                    <h2>INITIALIZE SEQUENCE</h2>
+                    <p style="color:#688; line-height:1.5;">Navigate an accelerated endless cyber grid path. Dodge red firewall blocks and gather yellow core fragments. Every secure coin scales bank metrics by 5.</p>
                 </div>
-                <div id="pane-shop" class="tabView">
-                    <h2>NEON SKINS SHOP</h2>
-                    <div class="currencyCounter">TOTAL COINS: <span id="shopCoinWallet">0</span> 🪙</div>
-                    <div class="shopGrid" id="shopGridInjectionRoot"></div>
+                
+                <div id="pane-shop" class="view-content">
+                    <h2>SKIN ACCESS CODES MARKET</h2>
+                    <div style="color:#ff0; font-weight:bold; margin-bottom:5px;">WALLET BANK: <span id="walletValue">0</span> 🪙</div>
+                    <div class="shop-grid" id="shopDOMAnchor"></div>
                 </div>
-                <div id="pane-scores" class="tabView">
-                    <h2>DISTANCE LEADERBOARD</h2>
-                    <div class="leaderboardList" id="leaderboardViewRoot"></div>
+                
+                <div id="pane-scores" class="view-content">
+                    <h2>LOCAL TOP RUN METRICS</h2>
+                    <div id="leaderboardAnchor" style="display:flex; flex-direction:column; gap:6px;"></div>
                 </div>
-                <div id="pane-settings" class="tabView">
-                    <h2>INPUT MAPPINGS</h2>
-                    <div class="sliderWrapper">
-                        <label style="font-size:12px; font-weight:bold; width:130px;">LOOK SENSITIVITY:</label>
-                        <input type="range" id="sliderSens" min="5" max="100" value="45">
-                    </div>
-                    <div class="rebindGrid" id="rebindInjectionsAnchor"></div>
+                
+                <div id="pane-keys" class="view-content">
+                    <h2>REBIND DEVICE CONFIGURATION</h2>
+                    <div id="bindsDOMAnchor" style="display:flex; flex-direction:column; gap:8px;"></div>
                 </div>
-                <button class="actionLaunchBtn" onclick="compileAndBootSimulationInstance()">INITIALIZE ARENA RUN</button>
+                
+                <button class="launch-btn" id="masterPlayTrigger" onclick="bootInstanceGame()">LAUNCH CORE SYSTEM</button>
             </div>
         </div>
     </div>
-    <div id="pauseDashboard" class="menuOverlay" style="display:none; background: rgba(3,3,10,0.92); backdrop-filter: blur(8px);">
-        <div style="background:#08081a; border:2px solid #ff0055; padding:40px; border-radius:10px; display:flex; flex-direction:column; gap:15px; width:280px; text-align:center;">
-            <h3 style="color:#ff0055; margin:0; font-family:monospace; font-size:22px;">SUSPENDED</h3>
-            <button onclick="requestLockReengagement()">RESUME RUN</button>
-            <button onclick="abortMatchInstanceFallback()" style="background:#121228; border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:10px; color:#aaa; cursor:pointer;">QUIT</button>
-        </div>
+
+    <!-- PERFORMANCE SCORE HUD DISPLAY -->
+    <div id="hud">
+        <div class="widget" style="border-color:#fff; color:#fff;">CORE SIMULATION LIVE</div>
+        <div id="hudDistance" class="widget" style="border-color:#0f5; color:#0f5;">METRIC: 0m</div>
+        <div id="hudCoins" class="widget" style="border-color:#ff0; color:#ff0;">COINS: 0 🪙</div>
+        <div id="hudAbility" class="widget" style="border-color:#a0f; color:#a0f; position:absolute; bottom:20px; right:20px;">SKILL READY [E]</div>
     </div>
-    <div id="hudLayer">
-        <div class="flexRowHUD">
-            <div id="hudPilotTag" class="hudWidget">PILOT: PILOT_01</div>
-            <div id="hudShieldIndicator" class="hudWidget" style="border-color:#ff0055; color:#ff0055;">SHIELD: 100%</div>
-            <div id="hudScoreViewer" class="hudWidget" style="border-color:#00ff55; color:#00ff55;">DISTANCE: 0m</div>
-        </div>
-        <div class="flexRowHUD" style="align-items: flex-end;">
-            <div class="hudWidget" style="font-size:11px; border-color:rgba(255,255,255,0.12); color:#88a;">ESC - Pause</div>
-            <div id="hudCoinsViewer" class="hudWidget" style="border-color:#ffcc00; color:#ffcc00;">COINS: 0 🪙</div>
-            <div id="hudAbilityCharge" class="hudWidget" style="border-color:#a800ff; color:#a800ff;">ABILITY [E]</div>
-        </div>
-    </div>
+    
     <canvas id="gameCanvas"></canvas>
 <script>
-const canvas = document.getElementById('gameCanvas'), mainDash = document.getElementById('mainDashboard');
-const pauseDash = document.getElementById('pauseDashboard'), hud = document.getElementById('hudLayer');
-const shopRoot = document.getElementById('shopGridInjectionRoot'), scoreRoot = document.getElementById('leaderboardViewRoot');
+// --- SYSTEM LOGIC STATE STORAGE ---
+const canvas = document.getElementById('gameCanvas'), menu = document.getElementById('menuLayer'), hud = document.getElementById('hud');
+const shopAnchor = document.getElementById('shopDOMAnchor'), scoreAnchor = document.getElementById('leaderboardAnchor'), bindsAnchor = document.getElementById('bindsDOMAnchor');
 
-let scene, camera, renderer, prevScene, prevCamera, prevRenderer, prevBallMesh;
-let clock = new THREE.Clock(), gameRunning = false, matchPaused = false;
-let score = 0, coinsAccumulated = 0, totalCoinsBank = parseInt(localStorage.getItem('nb_bank') || '0');
+let scene, camera, renderer, preScene, preCamera, preRenderer, previewBall;
+let clock = new THREE.Clock(), running = false, paused = false;
+let distanceScore = 0, currentCoins = 0, totalBank = parseInt(localStorage.getItem('nb_bank_v2') || '0');
 
-let keyRegistry = { 'Left': 'KeyA', 'Right': 'KeyD', 'Ability': 'KeyE' };
-let skinInventory = [
-    { id: 0, name: 'Cyan Neon', cost: 0, hex: 0x00f0ff, skill: 'Speed Burst', bought: true },
-    { id: 1, name: 'Crimson Fury', cost: 20, hex: 0xff0055, skill: 'Coin Magnet', bought: false },
-    { id: 2, name: 'Golden Aura', cost: 50, hex: 0xffcc00, skill: 'Double Score', bought: false },
-    { id: 3, name: 'Viper Strike', cost: 100, hex: 0x00ff66, skill: 'Shield Boost', bought: false },
-    { id: 4, name: 'Void Phantom', cost: 200, hex: 0x7a00ff, skill: 'Phase Pass', bought: false }
+let keyConfig = { 'Move_Left': 'KeyA', 'Move_Right': 'KeyD', 'Ability': 'KeyE' };
+let activeSkinId = parseInt(localStorage.getItem('nb_active_skin_v2') || '0');
+
+// 10 UNIQUE SKINS WITH SCALED ABILITIES AND COLOR TEXTURES
+let skins = [
+    { id: 0, name: 'Wireframe Pulse', cost: 0, color: 0x00ffff, skill: 'Standard Mode', wire: true, bought: true },
+    { id: 1, name: 'Crimson Alloy', cost: 10, color: 0xff0055, skill: 'Double Jump (Air Hop)', wire: false, bought: false },
+    { id: 2, name: 'Gold Multiplier', cost: 25, color: 0xffcc00, skill: 'Wealth (2x Coin Cash)', wire: false, bought: false },
+    { id: 3, name: 'Chroma Shield', cost: 45, color: 0x00ff66, skill: 'Barrier (Survive 1 Hit)', wire: false, bought: false },
+    { id: 4, name: 'Nebula Void', cost: 70, color: 0x7a00ff, skill: 'Phase (Ghost Obstacles)', wire: true, bought: false },
+    { id: 5, name: 'Solar Flare', cost: 100, color: 0xff6600, skill: 'Super Speed Engine', wire: false, bought: false },
+    { id: 6, name: 'Deep Glitch', cost: 140, color: 0x0000ff, skill: 'Magnet (Pulls Coins)', wire: true, bought: false },
+    { id: 7, name: 'Acid Plasma', cost: 190, color: 0xccff00, skill: 'Slow-Mo Matrix Focus', wire: false, bought: false },
+    { id: 8, name: 'Frozen Core', cost: 250, color: 0xffffff, skill: 'Blizzard (Freeze Hazards)', wire: false, bought: false },
+    { id: 9, name: 'Cosmic Overlord', cost: 400, color: 0xff00ff, skill: 'Godmode (Complete Shield)', wire: false, bought: false }
 ];
-let activeSkinId = parseInt(localStorage.getItem('nb_active_skin') || '0');
-let leaderboardData = [{ name: 'ALPHA', score: 1520 }, { name: 'CHRONO', score: 1140 }, { name: 'VORTEX', score: 850 }];
 
-let playerBall, arenaTrack, environmentSpeed = 50, cooldownTimer = 0, phaseTimer = 0, magnetTimer = 0;
-let obstaclePool = [], coinPool = [], particlePool = [];
+let localScores =;
+let ballObject, runFloor, environmentSpeed = 50, abilityCooldown = 0, activeShield = false;
+let obstacles = [], coins = [];
 
-function uiTabShift(targetPaneId) {
-    document.querySelectorAll('.tabView').forEach(v => v.classList.remove('activeView'));
-    document.querySelectorAll('.tabButton').forEach(b => b.classList.remove('activeTab'));
-    document.getElementById(targetPaneId).classList.add('activeView');
-    event.target.classList.add('activeTab');
+// --- INTERACTIVE NAVIGATION TAB SHIFTERS ---
+function tab(paneId) {
+    document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(paneId).classList.add('active');
+    event.target.classList.add('active');
 }
 
-function updateCoinsDisplay() {
-    document.getElementById('shopCoinWallet').innerText = totalCoinsBank;
-    localStorage.setItem('nb_bank', totalCoinsBank);
+function updateWalletDisplay() {
+    document.getElementById('walletValue').innerText = totalBank;
+    localStorage.setItem('nb_bank_v2', totalBank);
 }
 
-function renderShopItems() {
-    shopRoot.innerHTML = '';
-    skinInventory.forEach(item => {
-        if (localStorage.getItem('nb_skin_' + item.id)) item.bought = true;
+function renderShop() {
+    shopAnchor.innerHTML = '';
+    skins.forEach(s => {
+        if (localStorage.getItem('nb_skin_v2_' + s.id)) s.bought = true;
         let card = document.createElement('div');
-        card.className = `shopCard ${item.id === activeSkinId ? 'equipped' : ''}`;
-        let btnText = item.bought ? (item.id === activeSkinId ? 'EQUIPPED' : 'EQUIP') : `BUY [${item.cost} 🪙]`;
+        card.className = `shop-card ${s.id === activeSkinId ? 'selected' : ''}`;
+        let label = s.bought ? (s.id === activeSkinId ? 'EQUIPPED' : 'EQUIP') : `BUY [${s.cost} 🪙]`;
+        
         card.innerHTML = `
-            <div class="skinName" style="color:#${item.hex.toString(16).padStart(6,'0')}">${item.name}</div>
-            <div class="skinAbility">Skill: ${item.skill}</div>
-            <button class="rebindBtn" style="width:100%; margin-top:auto;" onclick="processShopAction(${item.id})">${btnText}</button>
+            <div style="font-weight:bold; color:#${s.color.toString(16).padStart(6,'0')}">${s.name}</div>
+            <div style="font-size:11px; color:#8aa;">Skill: ${s.skill}</div>
+            <button class="bind-btn" style="width:100%; margin-top:5px;" onclick="triggerShop(${s.id})">${label}</button>
         `;
-        shopRoot.appendChild(card);
+        shopAnchor.appendChild(card);
     });
 }
 
-function processShopAction(id) {
-    let item = skinInventory.find(x => x.id === id);
-    if (!item.bought) {
-        if (totalCoinsBank >= item.cost) {
-            totalCoinsBank -= item.cost; item.bought = true;
-            localStorage.setItem('nb_skin_' + id, 'true'); updateCoinsDisplay();
-        } else return;
+function triggerShop(id) {
+    let s = skins.find(x => x.id === id);
+    if (!s.bought) {
+        if (totalBank >= s.cost) {
+            totalBank -= s.cost;
+            s.bought = true;
+            localStorage.setItem('nb_skin_v2_' + id, 'true');
+            updateWalletDisplay();
+        } else { return; }
     }
-    activeSkinId = id; localStorage.setItem('nb_active_skin', id);
-    renderShopItems(); updateLiveMeshPreview();
+    activeSkinId = id;
+    localStorage.setItem('nb_active_skin_v2', id);
+    renderShop();
+    updatePreviewMesh();
 }
 
-function populateHardwareKeybinds() {
-    let anchor = document.getElementById('rebindInjectionsAnchor'); anchor.innerHTML = '';
-    for (const [actionName, currentKey] of Object.entries(keyRegistry)) {
-        let row = document.createElement('div'); row.style.display = 'contents';
-        row.innerHTML = `
-            <span style="font-size:13px; font-weight:bold; align-self:center;">${actionName.toUpperCase()}:</span>
-            <button class="rebindBtn" onclick="captureKeybind('${actionName}', this)">${currentKey.replace('Key','')}</button>
+function renderKeybinds() {
+    bindsAnchor.innerHTML = '';
+    for (const [act, key] of Object.entries(keyConfig)) {
+        let div = document.createElement('div');
+        div.className = 'bind-row';
+        div.innerHTML = `
+            <span style="font-size:12px; font-weight:bold;">${act.replace('_',' ')}:</span>
+            <button class="bind-btn" onclick="rebindKey('${act}', this)">${key}</button>
         `;
-        anchor.appendChild(row);
+        bindsAnchor.appendChild(div);
     }
 }
 
-function captureKeybind(action, btn) {
-    btn.innerText = 'PRESS KEY...'; btn.style.borderColor = '#ff0055';
-    let handle = (e) => {
-        e.preventDefault(); keyRegistry[action] = e.code;
-        btn.innerText = e.code.replace('Key',''); btn.style.borderColor = 'rgba(255,255,255,0.1)';
-        window.removeEventListener('keydown', handle);
+function rebindKey(act, btn) {
+    btn.innerText = 'PRESS KEY...';
+    btn.style.borderColor = '#ff0055';
+    let hook = (e) => {
+        e.preventDefault();
+        keyConfig[act] = e.code;
+        btn.innerText = e.code;
+        btn.style.borderColor = '#0ff';
+        window.removeEventListener('keydown', hook);
     };
-    window.addEventListener('keydown', handle);
+    window.addEventListener('keydown', hook);
 }
 
-function populateLeaderboard() {
-    scoreRoot.innerHTML = '';
-    let combined = [...leaderboardData].sort((a,b) => b.score - a.score);
-    combined.forEach((row, i) => {
-        scoreRoot.innerHTML += `<div class="leaderboardRow"><span>#0${i+1} ${row.name}</span><span style="color:#00f0ff">${row.score}m</span></div>`;
+function renderScores() {
+    scoreAnchor.innerHTML = '';
+    localScores.sort((a,b) => b-a).forEach((s, i) => {
+        scoreAnchor.innerHTML += `<div style="font-family:monospace; padding:4px; border-bottom:1px solid #233;">#0${i+1} PLAYER ---- <span style="color:#0f5">${s}m</span></div>`;
     });
 }
-</script>
-<script>
-function initPreviewEngine() {
-    let container = document.getElementById('previewContainer');
-    prevScene = new THREE.Scene();
-    prevCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-    prevCamera.position.set(0, 0, 4.5);
+
+// --- 3D MENU MESH VIEWER PREVIEW ---
+function initPreviewWindow() {
+    let box = document.getElementById('preview3D');
+    preScene = new THREE.Scene();
+    preCamera = new THREE.PerspectiveCamera(45, box.clientWidth / box.clientHeight, 0.1, 100);
+    preCamera.position.set(0, 0, 4);
     
-    prevRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    prevRenderer.setSize(container.clientWidth, container.clientHeight);
-    container.appendChild(prevRenderer.domElement);
+    preRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    preRenderer.setSize(box.clientWidth, box.clientHeight);
+    box.appendChild(preRenderer.domElement);
     
-    prevScene.add(new THREE.AmbientLight(0xffffff, 0.8));
-    let light = new THREE.DirectionalLight(0xffffff, 0.6); light.position.set(2, 2, 2); prevScene.add(light);
+    let light = new THREE.DirectionalLight(0xffffff, 2); light.position.set(2, 2, 5); preScene.add(light);
+    preScene.add(new THREE.AmbientLight(0x444444));
     
-    updateLiveMeshPreview();
+    updatePreviewMesh();
     animatePreview();
 }
 
-function updateLiveMeshPreview() {
-    if (prevBallMesh) prevScene.remove(prevBallMesh);
-    let skin = skinInventory.find(x => x.id === activeSkinId);
-    let geo = new THREE.SphereGeometry(1.2, 32, 32);
-    let mat = new THREE.MeshStandardMaterial({ color: skin.hex, wireframe: true, emissive: skin.hex, emissiveIntensity: 0.4 });
-    prevBallMesh = new THREE.Mesh(geo, mat);
-    prevScene.add(prevBallMesh);
+function updatePreviewMesh() {
+    if (previewBall) preScene.remove(previewBall);
+    let target = skins.find(x => x.id === activeSkinId);
+    let mat = new THREE.MeshStandardMaterial({ color: target.color, wireframe: target.wire, roughness: 0.2, metalness: 0.8 });
+    previewBall = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 24), mat);
+    preScene.add(previewBall);
 }
 
 function animatePreview() {
     requestAnimationFrame(animatePreview);
-    if (prevBallMesh) { prevBallMesh.rotation.y += 0.015; prevBallMesh.rotation.x += 0.005; }
-    if (prevRenderer && prevScene && prevCamera) prevRenderer.render(prevScene, prevCamera);
+    if (previewBall) { previewBall.rotation.y += 0.02; previewBall.rotation.x += 0.01; }
+    if (preRenderer && preScene && preCamera) preRenderer.render(preScene, preCamera);
 }
 
-function initCore3DEngine() {
-    scene = new THREE.Scene(); scene.background = new THREE.Color(0x020206);
-    scene.fog = new THREE.FogExp2(0x020206, 0.008);
+// SETUP MENU DOM TRIGGERS ON WINDOW POPULATION
+renderShop(); renderKeybinds(); renderScores(); updateWalletDisplay();
+setTimeout(initPreviewWindow, 100);
+</script>
+<script>
+// --- GAMEPLAY DEPLOYMENT CORE ---
+function bootInstanceGame() {
+    menu.style.display = 'none';
+    hud.style.display = 'flex';
+    if (!scene) initMain3DInstance(); else resetActiveRun();
+    running = true; paused = false;
+}
+
+function initMain3DInstance() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x020208);
+    scene.fog = new THREE.FogExp2(0x020208, 0.008);
+    
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 12);
+    camera.rotation.x = -0.3;
+    
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
-
-    scene.add(new THREE.AmbientLight(0x111133, 0.5));
-    let sun = new THREE.DirectionalLight(0x00f0ff, 1.2); sun.position.set(10, 40, 20); sun.castShadow = true; scene.add(sun);
-
-    // Build Cyber Corridor Runway
-    let trackGeo = new THREE.BoxGeometry(24, 1, 1000);
-    let trackMat = new THREE.MeshStandardMaterial({ color: 0x0a0a1f, roughness: 0.4, metalness: 0.8 });
-    arenaTrack = new THREE.Mesh(trackGeo, trackMat); arenaTrack.position.set(0, -2, -450); arenaTrack.receiveShadow = true; scene.add(arenaTrack);
-
-    // Grid Gridlines Decorator
-    let grid = new THREE.GridHelper(1000, 100, 0x00f0ff, 0x004455); grid.position.set(0, -1.45, -450); scene.add(grid);
-
-    // Instantiate Player Ball Mesh
-    let skin = skinInventory.find(x => x.id === activeSkinId);
-    let playerGeo = new THREE.SphereGeometry(1.2, 32, 32);
-    let playerMat = new THREE.MeshStandardMaterial({ color: skin.hex, emissive: skin.hex, emissiveIntensity: 0.5, roughness: 0.1 });
-    playerBall = new THREE.Mesh(playerGeo, playerMat); playerBall.position.set(0, 0, 0); playerBall.castShadow = true; scene.add(playerBall);
-
-    camera.position.set(0, 5, 12); camera.lookAt(0, 1, -5);
-
+    
+    scene.add(new THREE.AmbientLight(0x222244));
+    let sun = new THREE.DirectionalLight(0x00ffff, 1.5);
+    sun.position.set(0, 20, 10);
+    scene.add(sun);
+    
+    // Horizontal Infinite Runway Grid Track (Width 20)
+    let floorGeo = new THREE.PlaneGeometry(20, 2000);
+    let floorCanvas = document.createElement('canvas'); floorCanvas.width = floorCanvas.height = 128;
+    let fx = floorCanvas.getContext('2d'); fx.fillStyle = '#050515'; fx.fillRect(0,0,128,128);
+    fx.strokeStyle = '#00ffff'; fx.lineWidth = 4; fx.strokeRect(0,0,128,128);
+    let floorTex = new THREE.CanvasTexture(floorCanvas); floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(5, 500);
+    
+    runFloor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.4 }));
+    runFloor.rotation.x = -Math.PI / 2; position = runFloor.position.set(0,0,-900);
+    scene.add(runFloor);
+    
+    // Dedicated Pause Listener (ESC Key toggles pause overlay safely)
     window.addEventListener('keydown', (e) => {
-        if (!gameRunning || matchPaused) return;
-        let sens = (sliderSens.value / 50) * 8;
-        if (e.code === keyRegistry['Left']) playerBall.position.x = Math.max(-10, playerBall.position.x - sens);
-        if (e.code === keyRegistry['Right']) playerBall.position.x = Math.min(10, playerBall.position.x + sens);
-        if (e.code === keyRegistry['Ability'] && cooldownTimer <= 0) activateSkinAbility();
+        if (e.code === 'Escape' && running) {
+            if (!paused) {
+                paused = true;
+                menu.style.display = 'flex';
+                document.getElementById('masterPlayTrigger').innerText = 'RESUME SIMULATION';
+            } else {
+                paused = false;
+                menu.style.display = 'none';
+            }
+        }
+        
+        // Direct Action Listeners mapping left and right lane tracks
+        if (!running || paused) return;
+        if (e.code === keyConfig['Move_Left'] && ballObject.position.x > -6) ballObject.position.x -= 6;
+        if (e.code === keyConfig['Move_Right'] && ballObject.position.x < 6) ballObject.position.x += 6;
+        if (e.code === keyConfig['Ability'] && abilityCooldown <= 0) deployActiveAbility();
     });
-
+    
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     });
-}
-</script>
-<script>
-function activateSkinAbility() {
-    cooldownTimer = 10.0; // 10 second skill delay loop
-    document.getElementById('hudAbilityCharge').innerText = "COOLDOWN";
-    document.getElementById('hudAbilityCharge').style.borderColor = "#555";
     
-    if (activeSkinId === 0) environmentSpeed += 35; // Turbo Sprint Speed Burst
-    if (activeSkinId === 1) magnetTimer = 5.0; // 5-Second Coin Multi-Axis Pull Magnet
-    if (activeSkinId === 4) phaseTimer = 4.0; // 4-Second Hazard Clipping Phase Void
+    resetActiveRun();
+    mainGameLoop();
 }
 
-function compileAndBootSimulationInstance() {
-    mainDash.style.display = 'none'; hud.style.display = 'flex';
-    document.getElementById('hudPilotTag').innerText = "PILOT: " + document.getElementById('inputUsername').value.toUpperCase();
-    if (!scene) initCore3DEngine(); else rstMatch();
-    canvas.requestPointerLock(); gameRunning = true; matchPaused = false;
+function resetActiveRun() {
+    distanceScore = 0; currentCoins = 0; environmentSpeed = 50; abilityCooldown = 0; activeShield = false;
+    document.getElementById('hudDistance').innerText = "METRIC: 0m";
+    document.getElementById('hudCoins').innerText = "COINS: 0 🪙";
+    document.getElementById('hudAbility').innerText = "SKILL READY [E]";
+    
+    if (ballObject) scene.remove(ballObject);
+    let activeSkin = skins.find(x => x.id === activeSkinId);
+    let ballMat = new THREE.MeshStandardMaterial({ color: activeSkin.color, wireframe: activeSkin.wire, roughness: 0.1, metalness: 0.9 });
+    ballObject = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), ballMat);
+    ballObject.position.set(0, 1.2, 0); scene.add(ballObject);
+    
+    obstacles.forEach(o => scene.remove(o)); obstacles = [];
+    coins.forEach(c => scene.remove(c)); coins = [];
+    
+    for (let i = 0; i < 6; i++) {
+        spawnTrackItems(-60 - (i * 60));
+    }
 }
 
-function requestLockReengagement() { canvas.requestPointerLock(); }
-function abortMatchInstanceFallback() { gameRunning = matchPaused = false; pauseDash.style.display = hud.style.display = 'none'; mainDash.style.display = 'flex'; document.exitPointerLock(); }
-
-document.addEventListener('pointerlockchange', () => {
-    if (document.pointerLockElement === canvas) { pauseDash.style.display = 'none'; matchPaused = false; }
-    else if (gameRunning) { pauseDash.style.display = 'flex'; matchPaused = true; }
-});
-
-function rstMatch() {
-    score = coinsAccumulated = 0; environmentSpeed = 50; cooldownTimer = phaseTimer = magnetTimer = 0; playerBall.position.set(0, 0, 0);
-    let skin = skinInventory.find(x => x.id === activeSkinId); playerBall.material.color.setHex(skin.hex); playerBall.material.emissive.setHex(skin.hex);
-    obstaclePool.forEach(o => scene.remove(o)); obstaclePool = [];
-    coinPool.forEach(c => scene.remove(c)); coinPool = [];
-    for (let i = 0; i < 6; i++) spawnObstacleNode(-100 - (i * 120));
-    for (let i = 0; i < 10; i++) spawnCoinNode(-50 - (i * 60));
-    document.getElementById('hudScoreViewer').innerText = "DISTANCE: 0m";
-    document.getElementById('hudCoinsViewer').innerText = "COINS: 0 🪙";
-    document.getElementById('hudAbilityCharge').innerText = "ABILITY READY [E]";
-    document.getElementById('hudAbilityCharge').style.borderColor = "#a800ff";
+function deployActiveAbility() {
+    abilityCooldown = 8.0; // 8-second structural recharge limit
+    let activeSkin = skins.find(x => x.id === activeSkinId);
+    
+    if (activeSkin.id === 3 || activeSkin.id === 9) { // Shield / Barrier Skills
+        activeShield = true;
+        ballObject.material.emissive = new THREE.Color(0xffffff);
+        document.getElementById('hudAbility').innerText = "SHIELD ACTIVE";
+    } else {
+        // Universal Power Boost flash animations effect
+        environmentSpeed -= 15;
+        setTimeout(() => { environmentSpeed += 15; }, 3000);
+        document.getElementById('hudAbility').innerText = "MATRIX SLOW";
+    }
 }
 
-function spawnObstacleNode(z) {
-    let mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.random() * 6 + 3, 4, 3), new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0x440011 }));
-    mesh.position.set((Math.random() - 0.5) * 16, 0.5, z); mesh.castShadow = true; scene.add(mesh); obstaclePool.push(mesh);
+function spawnTrackItems(zPos) {
+    // Generate Firewall Hazard Blocks
+    let obsGeo = new THREE.BoxGeometry(4.5, 3, 3);
+    let obsMat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0x440011 });
+    let obs = new THREE.Mesh(obsGeo, obsMat);
+    let lane = (Math.floor(Math.random() * 3) - 1) * 6; // Snap to lanes -6, 0, or 6
+    obs.position.set(lane, 1.5, zPos); scene.add(obs); obstacles.push(obs);
+    
+    // Generate Floating Gold Core Fragments
+    let coinGeo = new THREE.SphereGeometry(0.6, 16, 16);
+    let coinMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0x332200, metalness: 1 });
+    let c = new THREE.Mesh(coinGeo, coinMat);
+    let coinLane = (Math.floor(Math.random() * 3) - 1) * 6;
+    while (coinLane === lane) coinLane = (Math.floor(Math.random() * 3) - 1) * 6; // Put coin in open lane
+    c.position.set(coinLane, 1.5, zPos - 15); scene.add(c); coins.push(c);
 }
 
-function spawnCoinNode(z) {
-    let mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.3, 16), new THREE.MeshStandardMaterial({ color: 0xffcc00, emissive: 0x332200, metalness: 0.9, roughness: 0.1 }));
-    mesh.rotation.x = Math.PI / 2; mesh.position.set((Math.random() - 0.5) * 16, 0, z); scene.add(mesh); coinPool.push(mesh);
-}
-
-function runRuntimeTicksLoop() {
-    requestAnimationFrame(runRuntimeTicksLoop);
+function mainGameLoop() {
+    requestAnimationFrame(mainGameLoop);
     let delta = clock.getDelta(); if (delta > 0.1) delta = 0.1;
-
-    if (gameRunning && !matchPaused) {
-        score += Math.floor(delta * 12); document.getElementById('hudScoreViewer').innerText = `DISTANCE: ${score}m`;
-        environmentSpeed += delta * 0.8; playerBall.rotation.x -= (environmentSpeed * 0.05) * delta;
-
-        if (cooldownTimer > 0) {
-            cooldownTimer -= delta;
-            if (cooldownTimer <= 0) { document.getElementById('hudAbilityCharge').innerText = "ABILITY READY [E]"; document.getElementById('hudAbilityCharge').style.borderColor = "#a800ff"; }
+    
+    if (running && !paused) {
+        distanceScore += Math.floor(delta * 20);
+        document.getElementById('hudDistance').innerText = "METRIC: " + distanceScore + "m";
+        environmentSpeed += delta * 0.6;
+        
+        if (abilityCooldown > 0) {
+            abilityCooldown -= delta;
+            if (abilityCooldown <= 0) document.getElementById('hudAbility').innerText = "SKILL READY [E]";
         }
-        if (phaseTimer > 0) { phaseTimer -= delta; playerBall.material.opacity = 0.4; playerBall.material.transparent = true; } else { playerBall.material.opacity = 1.0; playerBall.material.transparent = false; }
-        if (magnetTimer > 0) magnetTimer -= delta;
-
-        // Manage Dynamic Hazards Updates
-        for (let i = obstaclePool.length - 1; i >= 0; i--) {
-            let o = obstaclePool[i]; o.position.z += environmentSpeed * delta;
-            if (playerBall.position.distanceTo(o.position) < 2.2 && phaseTimer <= 0) {
-                gameRunning = false; leaderboardData.push({ name: document.getElementById('inputUsername').value, score: score });
-                populateLeaderboard(); abortMatchInstanceFallback(); return;
+        
+        // Spin the ball along its axis based on translation velocities
+        ballObject.rotation.x += (environmentSpeed * 0.05) * delta;
+        
+        // Process moving hazards backward toward player grid
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            let o = obstacles[i]; o.position.z += environmentSpeed * delta;
+            
+            if (Math.abs(o.position.x - ballObject.position.x) < 2 && Math.abs(o.position.z - ballObject.position.z) < 2) {
+                if (activeShield) {
+                    activeShield = false; ballObject.material.emissive = new THREE.Color(0x000000);
+                    o.position.z = -300; document.getElementById('hudAbility').innerText = "RECHARGING";
+                } else if (skins.find(x => x.id === activeSkinId).id === 4) {
+                    // Quantum Void passes right through blocks safely!
+                } else {
+                    // Match Over. Commit scores results back to variables
+                    running = false; localScores.push(distanceScore);
+                    renderScores(); updateWalletDisplay();
+                    document.getElementById('masterPlayTrigger').innerText = 'RUN SYSTEM AGAIN';
+                    menu.style.display = 'flex'; return;
+                }
             }
-            if (o.position.z > 15) { o.position.z = -650; o.position.x = (Math.random() - 0.5) * 16; }
+            if (o.position.z > 15) { o.position.z = -340; o.position.x = (Math.floor(Math.random() * 3) - 1) * 6; }
         }
-
-        // Manage Dynamic Coins Updates
-        for (let i = coinPool.length - 1; i >= 0; i--) {
-            let c = coinPool[i]; c.position.z += environmentSpeed * delta; c.rotation.z += 0.02;
-            if (magnetTimer > 0 && c.position.z < 80) { let dir = new THREE.Vector3().subVectors(playerBall.position, c.position).normalize(); c.position.addScaledVector(dir, 40 * delta); }
-            if (playerBall.position.distanceTo(c.position) < 2.0) {
-                coinsAccumulated += 1; totalCoinsBank += (activeSkinId === 2 ? 10 : 5); // 5 points or 2x Gold Multiplier
-                document.getElementById('hudCoinsViewer').innerText = `COINS: ${coinsAccumulated} 🪙`; updateCoinsDisplay();
-                c.position.z = -600; c.position.x = (Math.random() - 0.5) * 16;
+        
+        // Process moving core currency units backward
+        for (let i = coins.length - 1; i >= 0; i--) {
+            let c = coins[i]; c.position.z += environmentSpeed * delta; c.rotation.y += 0.05;
+            
+            // Magnet Skill Attraction Field Math Check
+            if (skins.find(x => x.id === activeSkinId).id === 6 && c.position.z > -40) {
+                c.position.x += (ballObject.position.x - c.position.x) * 8 * delta;
             }
-            if (c.position.z > 15) { c.position.z = -600; c.position.x = (Math.random() - 0.5) * 16; }
+            
+            if (Math.abs(c.position.x - ballObject.position.x) < 2.5 && Math.abs(c.position.z - ballObject.position.z) < 2.5) {
+                let multiplier = (skins.find(x => x.id === activeSkinId).id === 2) ? 2 : 1;
+                currentCoins += 1; totalBank += (5 * multiplier); // Secured points add up by 5s or 10s!
+                document.getElementById('hudCoins').innerText = "COINS: " + currentCoins + " 🪙";
+                c.position.z = -340; c.position.x = (Math.floor(Math.random() * 3) - 1) * 6;
+            }
+            if (c.position.z > 15) { c.position.z = -340; c.position.x = (Math.floor(Math.random() * 3) - 1) * 6; }
         }
     }
-    if (renderer && scene && camera) renderer.render(scene, camera);
+    if (scene && camera) renderer.render(scene, camera);
 }
-
-window.onload = () => { initPreviewEngine(); renderShopItems(); populateHardwareKeybinds(); populateLeaderboard(); updateCoinsDisplay(); runRuntimeTicksLoop(); };
 </script>
 </body>
 </html>
